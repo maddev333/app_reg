@@ -1,4 +1,29 @@
 #!/bin/bash
+
+check_and_update_secret() {  
+    echo "Checking for expiring or expired secrets..."  
+    secretEndDate=$(az ad app credential list --id "$2" -o tsv --query "[0].endDateTime")  
+    # Convert date to Unix timestamp  
+    secretEndDateTimestamp=$(date -d"$secretEndDate" +%s) 
+    echo "Secret End Date: $secretEndDate" 
+    threeMonthsLater=$(date -d "3 months" +%s) 
+  
+    if [ "$secretEndDateTimestamp" -le "$threeMonthsLater" ]; then  
+        echo "The secret has expired or is about to expire. Updating the secret..."  
+        # Reset the application credential  
+        newSecret=$(az ad app credential reset --id "$2" --years "2" --query "password" -o tsv --display-name "$1")  
+        if [ -n "$3" ]; then
+            # Store the new secret in Azure KeyVault  
+            echo "Updating Keyvault $3 for secret $1"
+            az keyvault secret set --name "$1" --vault-name "$3" --value "$newSecret" 
+        else
+        echo "No KeyVault was provided, please update manually" 
+        fi
+    else  
+        echo "The secret is not expired or about to expire. No action needed."  
+    fi  
+}  
+
 # Function to create the Azure AD application registration
 create_app_registration() {
     echo "Creating App Registration..."
@@ -6,7 +31,8 @@ create_app_registration() {
     existing_app=$(az ad app list --display-name "$1" --query "[].appId" -o tsv)
 
     if [[ -n $existing_app ]]; then
-       echo "The app already exists. Terminated"
+       echo "The app already exists. $existing_app"
+       check_and_update_secret "$1" "$existing_app" "$3" 
        exit 1
     fi
 
@@ -84,7 +110,7 @@ echo "Application Name: $applicationName"
 echo "Redirect URI: ${redirectUris}"
 
 # Create the Azure AD application registration
-create_app_registration "$applicationName" "$(echo "$redirectUris" | awk '{print $1}')"
+create_app_registration "$applicationName" "$(echo "$redirectUris" | awk '{print $1}')" "$keyVaultName"
 
 # Retrieve the application registration details
 appRegistration=$(az ad app list --display-name "$applicationName" --query "[0]")
