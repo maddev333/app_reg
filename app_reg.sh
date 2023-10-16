@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # Function to create the Azure AD application registration
 create_app_registration() {
     echo "Creating App Registration..."
@@ -43,19 +42,12 @@ update_application() {
     az ad app update --id "$1" --optional-claims @manifest.json
 }
 
-# Function to generate a client secret
-generate_client_secret() {
-    echo "Generating client secret..."
-    az ad app credential reset --id "$1" --years "2" --credential-description "Client Secret"
-}
-
 # Function to store the client secret in Azure Key Vault
 store_secret_in_keyvault() {
     echo "Storing Secret in KeyVault $2..."
     az keyvault secret set --name "$1" --vault-name "$2" --value "$3"
     return 0
 }
-
 
 # Parse command-line arguments
 while getopts ":n:r:k:" opt; do
@@ -91,7 +83,6 @@ fi
 echo "Application Name: $applicationName"
 echo "Redirect URI: ${redirectUris}"
 
-
 # Create the Azure AD application registration
 create_app_registration "$applicationName" "$(echo "$redirectUris" | awk '{print $1}')"
 
@@ -115,29 +106,19 @@ add_delegated_permissions "$applicationId" "e1fe6dd8-ba31-4d61-89e7-88639da4683d
 update_application "$applicationId" 
 echo "$applicationId"
 echo "$objectId"
-#az ad app update --id "$applicationId" --set "acceptMappedClaims=true"
+
 az ad app credential reset --id "$applicationId"
 
 echo "Generate the application secret"
 
 secret=$(az ad app credential reset --id "$applicationId" --years "2" --query "password" -o tsv --display-name "$applicationName")
 
-
-# Store the secret in Azure Key Vault
-#az keyvault secret set --vault-name "fortsa" --name "$applicationName" --value "$secret"
-
 az rest --method PATCH --url "https://graph.microsoft.com/v1.0/applications/$objectId" --headers "Content-Type=application/json" --body '{"api":{"acceptMappedClaims": "true"}}'
 
 #Create Enterprise App
 create_app_service_principal "$applicationId"
 
-# Associate additional redirect URIs with the Azure AD application
-#for ((i=1; i<${#redirectUris[@]}; i++)); do
-#    echo "${redirectUris[i]}"
 az ad app update --id $applicationId --web-redirect-uris ${redirectUris}
-    #az ad app update --id "$applicationId" --add replyUrls "[$(printf '"%s",' "${redirectUris[@]:$i:1}")]"
-
-#done
 
 if [ "$useKeyVault" = true ]; then
     
@@ -150,23 +131,4 @@ if [ "$useKeyVault" = true ]; then
     fi
 
 fi
-##############Create Claims Policy#########
-#claimPolicyName=$(az rest --method GET --url "https://graph.microsoft.com/v1.0/policies/claimsMappingPolicies" |jq '.value[]' |jq '.displayName')
-#claimPolicyName=$(echo "$claimPolicyName" | sed 's/"//g')
-#
-#if [ $claimPolicyName != "Test1234" ];then
-#    az rest --method POST --url "https://graph.microsoft.com/v1.0/policies/claimsMappingPolicies" --headers "Content-Type=application/json" --body '{
-#    "definition": [
-#        "{\"ClaimsMappingPolicy\":{\"Version\":1,\"IncludeBasicClaimSet\":\"true\",\"ClaimsSchema\": [{\"Source\":\"user\",\"ID\":\"employeeid\",\"JWTClaimType\":\"employeeid"},{\"Source\":\"user\",\"ID\":\"givenname\",\"SamlClaimType\":\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname\"},{\"Source\":\"user\",\"ID\":\"displayname\",\"SamlClaimType\":\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name\"},{\"Source\":\"user\",\"ID\":\"surname\",\"SamlClaimType\":\"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname\"},{\"Source\":\"user\",\"ID\":\"userprincipalname\",\"SamlClaimType\":\"username\"}],\"ClaimsTransformation\":[{\"ID\":\"CreateTermsOfService\",\"TransformationMethod\":\"CreateStringClaim\",\"InputParameters\": [{\"ID\":\"value\",\"DataType\":\"string\", \"Value\":\"sandbox\"}],\"OutputClaims\":[{\"ClaimTypeReferenceId\":\"TOS\",\"TransformationClaimType\":\"createdClaim\"}]}]}}"
-#    ],
-#    "displayName": "Test1234"
-#   }'
-#   echo "Claim Mapping Policy Created"
-#fi
-#
-#az rest --method GET --url "https://graph.microsoft.com/v1.0/policies/claimsMappingPolicies"
-#az rest --method DELETE --url "https://graph.microsoft.com/v1.0/policies/claimsMappingPolicies/3842d1f7-71a6-445b-aa2a-edeffb6aec8a"
-#
-#az rest --method GET --url "https://graph.microsoft.com/v1.0/policies/claimsMappingPolicies" |jq '.value[]' | jq '.id'
-#
-#az rest --method POST --url "https://graph.microsoft.com/v1.0/servicePrincipals/<servicePrincipalId>/addAssignedPolicies"
+
