@@ -36,6 +36,34 @@ check_and_update_secret() {
     fi  
 }  
 
+check_expiring_secrets() {  
+    echo "Checking for expiring secrets in all app registrations..."  
+    apps=$(az ad app list --query "[].{id: appId, name: displayName}" -o tsv)  
+  
+    while read -r appId appName  
+    do  
+        #echo "Checking app '$appName' with ID: $appId"  
+        secretEndDate=$(az ad app credential list --id "$appId" -o tsv --query "[0].endDateTime")  
+  
+        if [ -z "$secretEndDate" ]; then  
+        #    echo "No credentials found for app '$appName'"  
+            continue  
+        fi  
+  
+        # Convert date to Unix timestamp  
+        secretEndDateTimestamp=$(date -d"$secretEndDate" +%s)  
+        #echo "Secret End Date: $secretEndDate"  
+        threeMonthsLater=$(date -d "3 months" +%s)  
+  
+        if [ "$secretEndDateTimestamp" -le "$threeMonthsLater" ]; then    
+            echo "The secret for app '$appName' has expired or is about to expire."  
+        #else  
+        #    echo "The secret for app '$appName' is not expired or about to expire."  
+        fi  
+    done <<< "$apps"  
+}  
+
+
 # Function to create the Azure AD application registration
 create_app_registration() {
     echo "Creating App Registration..."
@@ -88,7 +116,7 @@ store_secret_in_keyvault() {
 }
 
 # Parse command-line arguments
-while getopts ":n:r:k:" opt; do
+while getopts ":n:r:k:c" opt; do
     case $opt in
         n)
             applicationName=$OPTARG
@@ -100,6 +128,9 @@ while getopts ":n:r:k:" opt; do
         k)
             keyVaultName=$OPTARG
             useKeyVault=true
+            ;;
+        c)
+            checksecrets=true
             ;;
         \?)
             echo "Invalid option: -$OPTARG" >&2
@@ -113,8 +144,15 @@ while getopts ":n:r:k:" opt; do
 done
 
 # Check if required command-line arguments are provided
+if [ "$checksecrets" = true ]; then
+    echo "Scanning for expired secrets"
+    check_expiring_secrets
+    exit 1
+fi
+
 if [ -z "$applicationName" ] || [ ${#redirectUris[@]} -eq 0 ]; then
     echo "Usage: $0 -n <applicationName> -r \"<redirectUri1> <redirectUri2> ...\" [-k <keyVaultName>]"
+    echo "Usage: Or -c to scan for expiring secrets - This option ignores other settings"
     exit 1
 fi
 
