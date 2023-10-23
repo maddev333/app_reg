@@ -2,14 +2,15 @@
 
 check_and_update_secret() {  
     echo "Checking for expiring or expired secrets..."  
-    secretEndDate=$(az ad app credential list --id "$2" -o tsv --query "[0].endDateTime")  
+    secretEndDate=$(az ad app credential list --id "$2" -o tsv --query "[0].endDateTime")
     # Convert date to Unix timestamp  
+    if [ "$secretEndDate" ]; then 
     secretEndDateTimestamp=$(date -d"$secretEndDate" +%s) 
     echo "Secret End Date: $secretEndDate" 
     threeMonthsLater=$(date -d "3 months" +%s) 
-  
-    if [ "$secretEndDateTimestamp" -le "$threeMonthsLater" ]; then   
-        echo "The secret has expired or is about to expire."  
+    fi
+    if [ -z "$secretEndDate" ]||[ "$secretEndDateTimestamp" -le "$threeMonthsLater" ]; then   
+        echo "The secret has expired, is about to expire or doesn't exist"  
         read -p "Do you want to update the secret? (y/N): " response  
         if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then  
             echo "Updating the secret..."
@@ -38,7 +39,7 @@ check_and_update_secret() {
 
 check_expiring_secrets() {  
     echo "Checking for expiring secrets in all app registrations..."  
-    apps=$(az ad app list --query "[].{id: appId, name: displayName}" -o tsv)  
+    apps=$(az ad app list --query "[].{id: appId, name: displayName}" -o tsv --all)  
   
     while read -r appId appName  
     do  
