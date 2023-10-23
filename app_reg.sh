@@ -8,16 +8,28 @@ check_and_update_secret() {
     echo "Secret End Date: $secretEndDate" 
     threeMonthsLater=$(date -d "3 months" +%s) 
   
-    if [ "$secretEndDateTimestamp" -le "$threeMonthsLater" ]; then  
-        echo "The secret has expired or is about to expire. Updating the secret..."  
+    if [ "$secretEndDateTimestamp" -le "$threeMonthsLater" ]; then   
+        echo "The secret has expired or is about to expire."  
+        read -p "Do you want to update the secret? (y/N): " response  
+        if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then  
+            echo "Updating the secret..."
         # Reset the application credential  
-        newSecret=$(az ad app credential reset --id "$2" --years "2" --query "password" -o tsv --display-name "$1")  
-        if [ -n "$3" ]; then
-            # Store the new secret in Azure KeyVault  
-            echo "Updating Keyvault $3 for secret $1"
-            az keyvault secret set --name "$1" --vault-name "$3" --value "$newSecret" 
-        else
+            newSecret=$(az ad app credential reset --id "$2" --years "2" --query "password" -o tsv --display-name "$1")  
+            echo $newSecret
+            if [ -n "$3" ]; then
+                # Store the new secret in Azure KeyVault  
+                echo "Updating Keyvault $3 for secret $1"
+                az keyvault secret set --name "$1" --vault-name "$3" --value "$newSecret" 
+                if [ $? -ne 0 ]; then  
+                    echo "Error: Failed to update the secret in Azure KeyVault. Please check the KeyVault name and permissions." 
+                    echo "Please manually add the following to KeyVault $newSecret" 
+                    return 1  
+                fi  
+            else
         echo "No KeyVault was provided, please update manually" 
+            fi
+        else  
+            echo "Update cancelled by user." 
         fi
     else  
         echo "The secret is not expired or about to expire. No action needed."  
