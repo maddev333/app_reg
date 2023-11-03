@@ -20,7 +20,7 @@ check_and_update_secret() {
             if [ -n "$3" ]; then
                 # Store the new secret in Azure KeyVault  
                 echo "Updating Keyvault $3 for secret $1"
-                az keyvault secret set --name "$1" --vault-name "$3" --value "$newSecret" 
+                az keyvault secret set --name "appreg-$1" --vault-name "$3" --value "$newSecret" 
                 if [ $? -ne 0 ]; then  
                     echo "Error: Failed to update the secret in Azure KeyVault. Please check the KeyVault name and permissions." 
                     echo "Please manually add the following to KeyVault $newSecret" 
@@ -112,7 +112,7 @@ update_application() {
 # Function to store the client secret in Azure Key Vault
 store_secret_in_keyvault() {
     echo "Storing Secret in KeyVault $2..."
-    az keyvault secret set --name "$1" --vault-name "$2" --value "$3"
+    az keyvault secret set --name "appreg-$1" --vault-name "$2" --value "$3"
     return 0
 }
 
