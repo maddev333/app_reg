@@ -45,7 +45,8 @@ check_expiring_secrets() {
     do  
         #echo "Checking app '$appName' with ID: $appId"  
         secretEndDate=$(az ad app credential list --id "$appId" -o tsv --query "[0].endDateTime")  
-  
+        secretOwner=$(az ad app owner list --id "$appId" -o tsv --query "[0].userPrincipalName")
+        secretClientId=
         if [ -z "$secretEndDate" ]; then  
         #    echo "No credentials found for app '$appName'"  
             continue  
@@ -57,7 +58,7 @@ check_expiring_secrets() {
         threeMonthsLater=$(date -d "3 months" +%s)  
   
         if [ "$secretEndDateTimestamp" -le "$threeMonthsLater" ]; then    
-            echo "The secret for app '$appName' has expired or is about to expire."  
+            echo "A cient secret for app '$appName' has expired or is about to expire on $secretEndDate. The owner is $secretOwner"  
         #else  
         #    echo "The secret for app '$appName' is not expired or about to expire."  
         fi  
