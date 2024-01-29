@@ -78,7 +78,7 @@ create_app_registration() {
        exit 1
     fi
 
-    az ad app create --display-name "$1" --web-redirect-uris "$2" --sign-in-audience "AzureADMyOrg"
+    az ad app create --display-name "$1" --web-redirect-uris "$2" --sign-in-audience "AzureADMyOrg" --enable-access-token-issuance "true"
     sleep 5
 }
 
