@@ -58,7 +58,8 @@ check_expiring_secrets() {
         threeMonthsLater=$(date -d "3 months" +%s)  
   
         if [ "$secretEndDateTimestamp" -le "$threeMonthsLater" ]; then    
-            echo "A cient secret for app '$appName' has expired or is about to expire on $secretEndDate. The owner is $secretOwner"  
+            echo "A client secret for app '$appName' has expired or is about to expire on $secretEndDate. The owner is $secretOwner" 
+            curl --url 'smtps://smtp.gmail.com:465' --ssl-reqd --mail-from 'from-email@gmail.com' --mail-rcpt 'to-email@gmail.com' --user 'from-email@gmail.com:YourPassword' -T <(echo -e 'From: from-email@gmail.com\nTo: to-email@gmail.com\nSubject: Curl Test\n\nHello') 
         #else  
         #    echo "The secret for app '$appName' is not expired or about to expire."  
         fi  
