@@ -48,5 +48,6 @@ jobs:
           inlineScript: |
             az account show
             az storage -h
-            ./app_reg.sh
+            ./app_reg.sh -c
+            az logout
 
