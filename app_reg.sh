@@ -40,14 +40,15 @@ check_and_update_secret() {
 check_expiring_secrets() {
     echo "Checking for expiring secrets in all app registrations..."
     apps=$(az ad app list --query "[].{id: appId, name: displayName}" -o tsv --all)
-
+    # Initialize the email body
+    email_body="<html><body><h2>Expiring Secret Notification</h2>"
     while read -r appId appName  
     do
         #echo "Checking app $appName with ID: $appId"
         secretEndDate=$(az ad app credential list --id "$appId" -o tsv --query "[0].endDateTime")
         #echo "End date: $secretEndDate"
         secretOwner=$(az ad app owner list --id "$appId" -o tsv --query "[0].userPrincipalName")
-
+        
         if [ -z "$secretEndDate" ]; then
         #    echo "No credentials found for app $appName"
             continue
@@ -106,12 +107,22 @@ fi
 # Compare timestamps
 if [ "$secretEndDateTimestamp" -le "$threeMonthsLaterTimestamp" ]; then
     echo "A client secret for app '$appName' has expired or is about to expire on $secretEndDate. The owner is $secretOwner"
+    email_body+="<p>A client secret for app <strong>'$appName'</strong> has expired or is about to expire on <strong>$secretEndDate</strong>. The owner is <strong>$secretOwner</strong>.</p>"
     # Add your code here for further actions (e.g., notification)
 else
     echo "The secret for app '$appName' is not expired or about to expire."
 fi
    done <<< "$apps"  
+   # Close the HTML body
+   email_body+="</body></html>"
 
+   # Send email with the accumulated details
+   if [ -n "$email_body" ]; then
+       # Send email using curl with HTML content type
+       curl --url 'smtps://smtp.gmail.com:465' --ssl-reqd --mail-from 'from-email@gmail.com' --mail-rcpt '<recipient_email_address>' --user 'from-email@gmail.com:YourPassword' -H "Content-Type: text/html" -T <(echo "$email_body")
+   else
+       echo "No expiring secrets found."
+   fi
 }
 
 
