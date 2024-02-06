@@ -53,7 +53,8 @@ check_expiring_secrets() {
         fi  
   
         # Convert date to Unix timestamp  
-        secretEndDateTimestamp=$(date -d"$secretEndDate" +%s)  
+        # secretEndDateTimestamp=$(date -d"$secretEndDate" +%s)  
+        secretEndDateTimestamp=$(date -d "$(echo $secretEndDate | sed 's/T/ /; s/\.[0-9]*Z//')" +%s)
         #echo "Secret End Date: $secretEndDate"  
         threeMonthsLater=$(date -d "3 months" +%s)  
   
