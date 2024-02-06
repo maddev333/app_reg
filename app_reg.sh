@@ -107,8 +107,8 @@ fi
 if [ "$secretEndDateTimestamp" -le "$threeMonthsLaterTimestamp" ]; then
     echo "A client secret for app '$appName' has expired or is about to expire on $secretEndDate. The owner is $secretOwner"
     # Add your code here for further actions (e.g., notification)
-#else
-#    echo "The secret for app '$appName' is not expired or about to expire."
+else
+    echo "The secret for app '$appName' is not expired or about to expire."
 fi
    done <<< "$apps"  
 
