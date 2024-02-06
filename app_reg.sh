@@ -61,7 +61,7 @@ check_expiring_secrets() {
         threeMonthsLater=$(python -c "from datetime import datetime, timedelta; print((datetime.strptime('$secretEndDate', '%Y-%m-%dT%H:%M:%S.%fZ') + timedelta(days=90)).timestamp())")
   
         #if [ "$secretEndDateTimestamp" -le "$threeMonthsLater" ]; then
-        if [ "$(echo "$secretEndDateTimestamp" | bc)" -le "$(echo "$threeMonthsLater" | bc)" ]; then
+        if [ "$(printf "%.0f" "$secretEndDateTimestamp")" -le "$(printf "%.0f" "$threeMonthsLater")" ]; then
             echo "A client secret for app '$appName' has expired or is about to expire on $secretEndDate. The owner is $secretOwner" 
             #curl --url 'smtps://smtp.gmail.com:465' --ssl-reqd --mail-from 'from-email@gmail.com' --mail-rcpt 'to-email@gmail.com' --user 'from-email@gmail.com:YourPassword' -T <(echo -e 'From: from-email@gmail.com\nTo: to-email@gmail.com\nSubject: Curl Test\n\nHello') 
         #else  
