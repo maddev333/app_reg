@@ -94,6 +94,7 @@ else
     echo "The secret for app '$appName' is not expired or about to expire."
 fi
 
+
     done
 }
 
