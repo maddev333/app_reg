@@ -72,14 +72,14 @@ echo $secretEndDateTimestamp
 ###########
 # Extract components from the original timestamp
 year=$(date -u -d "@$secretEndDateTimestamp" "+%Y")
-month=$(date -u -d "@$secretEndDateTimestamp" "+%m")
+month=$(date -u -d "@$secretEndDateTimestamp" "+%m" | sed 's/^0//') # Remove leading zeros
 day=$(date -u -d "@$secretEndDateTimestamp" "+%d")
 hour=$(date -u -d "@$secretEndDateTimestamp" "+%H")
 minute=$(date -u -d "@$secretEndDateTimestamp" "+%M")
 second=$(date -u -d "@$secretEndDateTimestamp" "+%S")
 
 # Increment month by 3, handle edge cases where month exceeds 12
-new_month=$((10#$month + 3))
+new_month=$((month + 3))
 if [ $new_month -gt 12 ]; then
     new_month=$((new_month - 12))
     year=$((year + 1))
