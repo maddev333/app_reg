@@ -37,51 +37,34 @@ check_and_update_secret() {
     fi  
 }  
 
-check_expiring_secrets() {  
-    echo "Checking for expiring secrets in all app registrations..."  
-    apps=$(az ad app list --query "[].{id: appId, name: displayName}" -o tsv --all)  
-  
-    while read -r appId appName  
-    do  
-        #echo "Checking app '$appName' with ID: $appId"  
-        secretEndDate=$(az ad app credential list --id "$appId" -o tsv --query "[0].endDateTime")  
+check_expiring_secrets() {
+    echo "Checking for expiring secrets in all app registrations..."
+    apps=$(az ad app list --query "[].{id: appId, name: displayName}" -o tsv --all)
+
+    echo "$apps" | while read -r appId appName; do
+        echo "Checking app $appName with ID: $appId"
+        secretEndDate=$(az ad app credential list --id "$appId" -o tsv --query "[0].endDateTime")
+        echo "End date: $secretEndDate"
         secretOwner=$(az ad app owner list --id "$appId" -o tsv --query "[0].userPrincipalName")
-        secretClientId=
-        if [ -z "$secretEndDate" ]; then  
-        #    echo "No credentials found for app '$appName'"  
-            continue  
-        fi  
-  
-        # Convert date to Unix timestamp  
-        #secretEndDateTimestamp=$(date -d "$secretEndDate" +%s)  
-        #secretEndDateTimestamp=$(date -d "$(echo "$secretEndDate" | sed 's/T/ /; s/\.[0-9]\+Z/Z/')" +%s)
-        #secretEndDateTimestamp=$(date -d "$(echo "$secretEndDate" | sed 's/T/ /; s/\([0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}\)\.\([0-9]\+\)Z/\1.\2/')")
-        #secretEndDateTimestamp=$(date -d "$(echo "$secretEndDate" | sed 's/T/ /; s/\.[0-9]\+Z/ /')" +%s)
-        secretEndDateTimestamp=$(python -c "from datetime import datetime; print(int(datetime.strptime('$secretEndDate', '%Y-%m-%dT%H:%M:%S.%fZ').timestamp()))")
-        
-        #echo "Secret End Date: $secretEndDate"  
-        #threeMonthsLater=$(date -d "3 months" +%s)  
-        #threeMonthsLater=$(date -d "$(date -d '+3 months' +%Y-%m-%d)" +%s)
-        #threeMonthsLater=$(python -c "from datetime import datetime, timedelta; print((datetime.strptime('$secretEndDate', '%Y-%m-%dT%H:%M:%S.%fZ') + timedelta(days=90)).timestamp())")
-        #threeMonthsLater=$(python -c "from datetime import datetime, timedelta; print(int((datetime.strptime('$secretEndDate', '%Y-%m-%dT%H:%M:%S.%fZ') + timedelta(days=90)).timestamp()))")
-        #threeMonthsLater=$(date -d "+3 months" +%s)
-        #threeMonthsLaterTimestamp=$(date -d "$(date -d '+3 months' "+%Y-%m-%dT%H:%M:%SZ")" +%s)
-        threeMonthsLaterTimestamp=$(python -c "from datetime import datetime, timedelta; print(int((datetime.strptime('$secretEndDate', '%Y-%m-%dT%H:%M:%S.%fZ') + timedelta(days=90)).timestamp()))")
 
+        if [ -z "$secretEndDate" ]; then
+            echo "No credentials found for app $appName"
+            continue
+        fi
 
+        # Convert date to Unix timestamp
+        secretEndDateTimestamp=$(date -d "$secretEndDate" +%s)
+        threeMonthsLater=$(date -d "3 months" +%s)
 
-        #if [ "$secretEndDateTimestamp" -le "$threeMonthsLater" ]; then
-        #if [ "$secretEndDateTimestamp" -le "$threeMonthsLater" ]; then
-        if [ "$secretEndDateTimestamp" -le "$threeMonthsLaterTimestamp" ]; then
-        #if [ "$(printf "%.0f" "$secretEndDateTimestamp")" -le "$(printf "%.0f" "$threeMonthsLater")" ]; then
-        #if [ "$secretEndDateTimestamp" -le "$threeMonthsLaterTimestamp" ]; then
-            echo "A client secret for app '$appName' has expired or is about to expire on $secretEndDate. The owner is $secretOwner" 
-            #curl --url 'smtps://smtp.gmail.com:465' --ssl-reqd --mail-from 'from-email@gmail.com' --mail-rcpt 'to-email@gmail.com' --user 'from-email@gmail.com:YourPassword' -T <(echo -e 'From: from-email@gmail.com\nTo: to-email@gmail.com\nSubject: Curl Test\n\nHello') 
-        #else  
-        #    echo "The secret for app '$appName' is not expired or about to expire."  
-        fi  
-    done <<< "$apps"  
-}  
+        if [ "$secretEndDateTimestamp" -le "$threeMonthsLater" ]; then
+            echo "A client secret for app '$appName' has expired or is about to expire on $secretEndDate. The owner is $secretOwner"
+            # Add your code here for further actions (e.g., notification)
+        else
+            echo "The secret for app '$appName' is not expired or about to expire."
+        fi
+    done
+}
+
 
 
 # Function to create the Azure AD application registration
