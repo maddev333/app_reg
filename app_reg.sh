@@ -52,18 +52,45 @@ check_expiring_secrets() {
             continue
         fi
 
-        # Convert date to Unix timestamp
-        #secretEndDateTimestamp=$(date -d "$(echo "$secretEndDate" | sed 's/T/ /; s/\.[0-9]\+Z/Z/')" +%s)
+         # Extract components from the date string
+year=$(echo "$secretEndDate" | cut -d'-' -f1)
+month=$(echo "$secretEndDate" | cut -d'-' -f2)
+day=$(echo "$secretEndDate" | cut -d'-' -f3 | cut -dT -f1)
+hour=$(echo "$secretEndDate" | cut -dT -f2 | cut -d':' -f1)
+minute=$(echo "$secretEndDate" | cut -dT -f2 | cut -d':' -f2)
+second=$(echo "$secretEndDate" | cut -dT -f2 | cut -d':' -f3 | cut -d'.' -f1)
 
-        # Calculate Unix timestamp for three months later
-        #threeMonthsLater=$(date -d "$(date -d '+3 months' +%Y-%m-%d)" +%s)
-       # Check if the date string is not empty
-# Format date using date command (directly pass to Python)
-secretEndDateTimestamp=$(date -u -d "$secretEndDate" +"%Y-%m-%dT%H:%M:%S.%NZ" | python -c "from datetime import datetime; print(int(datetime.strptime(input(), '%Y-%m-%dT%H:%M:%S.%fZ').timestamp()))")
+# Construct a new date string with delimiters
+new_date_string="$year-$month-$day $hour:$minute:$second"
 
-# Calculate Unix timestamp for three months later using Python
-threeMonthsLaterTimestamp=$(date -u -d "$secretEndDate +3 months" +"%Y-%m-%dT%H:%M:%S.%NZ" | python -c "from datetime import datetime, timedelta; print(int(datetime.strptime(input(), '%Y-%m-%dT%H:%M:%S.%fZ') + timedelta(days=90)).timestamp())")
+# Use BusyBox's date command to convert the new date string to timestamp
+secretEndDateTimestamp=$(date -u -d "$new_date_string" "+%s")
 
+echo $secretEndDateTimestamp
+
+###########
+# Extract components from the original timestamp
+year=$(date -u -d "@$secretEndDateTimestamp" "+%Y")
+month=$(date -u -d "@$secretEndDateTimestamp" "+%m")
+day=$(date -u -d "@$secretEndDateTimestamp" "+%d")
+hour=$(date -u -d "@$secretEndDateTimestamp" "+%H")
+minute=$(date -u -d "@$secretEndDateTimestamp" "+%M")
+second=$(date -u -d "@$secretEndDateTimestamp" "+%S")
+
+# Increment month by 3, handle edge cases where month exceeds 12
+new_month=$((10#$month + 3))
+if [ $new_month -gt 12 ]; then
+    new_month=$((new_month - 12))
+    year=$((year + 1))
+fi
+
+# Construct a new date string with updated month
+new_date_string="$year-$new_month-$day $hour:$minute:$second"
+
+# Convert the new date string to a Unix timestamp
+threeMonthsLaterTimestamp=$(date -u -d "$new_date_string" "+%s")
+
+echo $threeMonthsLaterTimestamp
 # Check if timestamps are integers before comparison
 if [ -z "$secretEndDateTimestamp" ] || [ -z "$threeMonthsLaterTimestamp" ]; then
     echo "Invalid timestamp values. Skipping app '$appName'."
