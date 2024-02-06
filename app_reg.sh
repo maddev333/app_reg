@@ -54,12 +54,13 @@ check_expiring_secrets() {
   
         # Convert date to Unix timestamp  
         # secretEndDateTimestamp=$(date -d"$secretEndDate" +%s)  
-        secretEndDateTimestamp=$(date -d "$(echo $secretEndDate | sed 's/T/ /; s/\.[0-9]*Z//')" +%s)
+        secretEndDateTimestamp=$(date -d "$(echo "$secretEndDate" | sed 's/T/ /; s/\.[0-9]\+Z/Z/')" +%s)
         #echo "Secret End Date: $secretEndDate"  
         #threeMonthsLater=$(date -d "3 months" +%s)  
         #threeMonthsLater=$(date -d "$(date -d '+3 months' +%Y-%m-%d)" +%s)
-        threeMonthsLater=$(python -c "from datetime import datetime, timedelta; print((datetime.strptime('$secretEndDate', '%Y-%m-%dT%H:%M:%S.%fZ') + timedelta(days=90)).timestamp())")
-  
+        #threeMonthsLater=$(python -c "from datetime import datetime, timedelta; print((datetime.strptime('$secretEndDate', '%Y-%m-%dT%H:%M:%S.%fZ') + timedelta(days=90)).timestamp())")
+        threeMonthsLater=$(python -c "from datetime import datetime, timedelta; print(int((datetime.strptime('$secretEndDate', '%Y-%m-%dT%H:%M:%S.%fZ') + timedelta(days=90)).timestamp()))")
+
         #if [ "$secretEndDateTimestamp" -le "$threeMonthsLater" ]; then
         if [ "$(printf "%.0f" "$secretEndDateTimestamp")" -le "$(printf "%.0f" "$threeMonthsLater")" ]; then
             echo "A client secret for app '$appName' has expired or is about to expire on $secretEndDate. The owner is $secretOwner" 
