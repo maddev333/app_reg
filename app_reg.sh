@@ -72,16 +72,17 @@ secretEndDateTimestamp=$(date -u -d "$new_date_string" "+%s")
 echo $secretEndDateTimestamp
 
 ###########
-# Extract components from the original timestamp
-year=$(date -u -d "@$secretEndDateTimestamp" "+%Y")
-month=$(date -u -d "@$secretEndDateTimestamp" "+%m" | sed 's/^0//') # Remove leading zeros
-day=$(date -u -d "@$secretEndDateTimestamp" "+%d")
-hour=$(date -u -d "@$secretEndDateTimestamp" "+%H")
-minute=$(date -u -d "@$secretEndDateTimestamp" "+%M")
+# Extract components from the current timestamp
+currentYear=$(date -u "+%Y")
+currentMonth=$(date -u "+%m" | sed 's/^0//') # Remove leading zeros
+currentDay=$(date -u "+%d")
+currentHour=$(date -u "+%H")
+currentMinute=$(date -u "+%M")
+
 #second=$(date -u -d "@$secretEndDateTimestamp" "+%S")
 
 # Increment month by 3, handle edge cases where month exceeds 12
-new_month=$((month + 3))
+new_month=$((currentMonth + 3))
 if [ $new_month -gt 12 ]; then
     new_month=$((new_month - 12))
     year=$((year + 1))
@@ -89,7 +90,7 @@ fi
 
 # Construct a new date string with updated month
 #new_date_string="$year-$new_month-$day $hour:$minute:$second"
-new_date_string="$year-$new_month-$day $hour:$minute"
+new_date_string="$currentYear-$new_month-$currentDay $currentHour:$currentMinute"
 
 
 # Convert the new date string to a Unix timestamp
