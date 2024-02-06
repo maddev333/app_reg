@@ -43,7 +43,7 @@ check_expiring_secrets() {
     # Initialize the email body
     email_body="<html><body><h2>Expiring Secret Notification</h2>"
     recipients=""
-    
+
     while read -r appId appName  
     do
         #echo "Checking app $appName with ID: $appId"
@@ -128,6 +128,7 @@ fi
    # Output the HTML email body
    echo "Recipients: $recipients"
    echo "$email_body"
+   exit 0
 }
 
 
