@@ -55,9 +55,9 @@ check_expiring_secrets() {
         # Convert date to Unix timestamp  
         #secretEndDateTimestamp=$(date -d "$secretEndDate" +%s)  
         #secretEndDateTimestamp=$(date -d "$(echo "$secretEndDate" | sed 's/T/ /; s/\.[0-9]\+Z/Z/')" +%s)
-        secretEndDateTimestamp=$(date -d "$(echo "$secretEndDate" | sed 's/T/ /; s/\([0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}\)\.\([0-9]\+\)Z/\1.\2/')")
+        #secretEndDateTimestamp=$(date -d "$(echo "$secretEndDate" | sed 's/T/ /; s/\([0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}\)\.\([0-9]\+\)Z/\1.\2/')")
         #secretEndDateTimestamp=$(date -d "$(echo "$secretEndDate" | sed 's/T/ /; s/\.[0-9]\+Z/ /')" +%s)
-        #secretEndDateTimestamp=$(date -d "$(echo "$secretEndDate" | sed 's/T/ /; s/\.[0-9]\+Z/ /')" +%s)
+        secretEndDateTimestamp=$(python -c "from datetime import datetime, timedelta; print(int((datetime.strptime('$secretEndDate', '%Y-%m-%dT%H:%M:%S.%fZ'))))")
         
         #echo "Secret End Date: $secretEndDate"  
         #threeMonthsLater=$(date -d "3 months" +%s)  
