@@ -45,11 +45,11 @@ check_expiring_secrets() {
     do
         echo "Checking app $appName with ID: $appId"
         secretEndDate=$(az ad app credential list --id "$appId" -o tsv --query "[0].endDateTime")
-        echo "End date: $secretEndDate"
+        #echo "End date: $secretEndDate"
         secretOwner=$(az ad app owner list --id "$appId" -o tsv --query "[0].userPrincipalName")
 
         if [ -z "$secretEndDate" ]; then
-            echo "No credentials found for app $appName"
+        #    echo "No credentials found for app $appName"
             continue
         fi
 
@@ -69,7 +69,7 @@ new_date_string="$year-$month-$day $hour:$minute"
 # Use BusyBox's date command to convert the new date string to timestamp
 secretEndDateTimestamp=$(date -u -d "$new_date_string" "+%s")
 
-echo $secretEndDateTimestamp
+#echo $secretEndDateTimestamp
 
 ###########
 # Extract components from the current timestamp
@@ -96,7 +96,7 @@ new_date_string="$currentYear-$new_month-$currentDay $currentHour:$currentMinute
 # Convert the new date string to a Unix timestamp
 threeMonthsLaterTimestamp=$(date -u -d "$new_date_string" "+%s")
 
-echo $threeMonthsLaterTimestamp
+#echo $threeMonthsLaterTimestamp
 # Check if timestamps are integers before comparison
 if [ -z "$secretEndDateTimestamp" ] || [ -z "$threeMonthsLaterTimestamp" ]; then
     echo "Invalid timestamp values. Skipping app '$appName'."
@@ -107,8 +107,8 @@ fi
 if [ "$secretEndDateTimestamp" -le "$threeMonthsLaterTimestamp" ]; then
     echo "A client secret for app '$appName' has expired or is about to expire on $secretEndDate. The owner is $secretOwner"
     # Add your code here for further actions (e.g., notification)
-else
-    echo "The secret for app '$appName' is not expired or about to expire."
+#else
+#    echo "The secret for app '$appName' is not expired or about to expire."
 fi
    done <<< "$apps"  
 
