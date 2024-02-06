@@ -58,33 +58,11 @@ check_expiring_secrets() {
         # Calculate Unix timestamp for three months later
         #threeMonthsLater=$(date -d "$(date -d '+3 months' +%Y-%m-%d)" +%s)
        # Check if the date string is not empty
-
-
-# Format date using date command
-formattedDate=$(date -d "$secretEndDate" --utc +"%Y-%m-%dT%H:%M:%S.%NZ")
-
-# Check if the formatted date string is not empty
-if [ -z "$formattedDate" ]; then
-    echo "Failed to format date. Skipping app '$appName'."
-    continue
-fi
-
-# Convert formatted date to Unix timestamp using Python
-secretEndDateTimestamp=$(python -c "
-from datetime import datetime
-date_str = '$formattedDate'
-dt = datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%S.%fZ')
-print(int(dt.timestamp()))
-")
+# Format date using date command (directly pass to Python)
+secretEndDateTimestamp=$(date -u -d "$secretEndDate" +"%Y-%m-%dT%H:%M:%S.%NZ" | python -c "from datetime import datetime; print(int(datetime.strptime(input(), '%Y-%m-%dT%H:%M:%S.%fZ').timestamp()))")
 
 # Calculate Unix timestamp for three months later using Python
-threeMonthsLaterTimestamp=$(python -c "
-from datetime import datetime, timedelta
-date_str = '$formattedDate'
-dt = datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%S.%fZ')
-three_months_later = dt + timedelta(days=90)
-print(int(three_months_later.timestamp()))
-")
+threeMonthsLaterTimestamp=$(date -u -d "$secretEndDate +3 months" +"%Y-%m-%dT%H:%M:%S.%NZ" | python -c "from datetime import datetime, timedelta; print(int(datetime.strptime(input(), '%Y-%m-%dT%H:%M:%S.%fZ') + timedelta(days=90)).timestamp())")
 
 # Check if timestamps are integers before comparison
 if [ -z "$secretEndDateTimestamp" ] || [ -z "$threeMonthsLaterTimestamp" ]; then
