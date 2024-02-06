@@ -46,8 +46,8 @@ jobs:
         with:
           azcliversion: 2.0.72
           inlineScript: |
+            az account list
             az account show
-            az storage -h
             ./app_reg.sh -c
             az logout
 
