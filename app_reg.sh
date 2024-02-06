@@ -58,10 +58,10 @@ check_expiring_secrets() {
         # Calculate Unix timestamp for three months later
         #threeMonthsLater=$(date -d "$(date -d '+3 months' +%Y-%m-%d)" +%s)
         # Convert date to Unix timestamp using Python
-        secretEndDateTimestamp=$(python -c "from datetime import datetime, timedelta; print(int((datetime.strptime('$secretEndDate', '%Y-%m-%dT%H:%M:%S.%fZ')).timestamp()))")
+        secretEndDateTimestamp=$(python -c "from datetime import datetime, timedelta; print(int((datetime.strptime('$secretEndDate', '%Y-%m-%dT%H:%M:%SZ')).timestamp()))")
 
         # Calculate Unix timestamp for three months later using Python
-        threeMonthsLater=$(python -c "from datetime import datetime, timedelta; print(int((datetime.strptime('$secretEndDate', '%Y-%m-%dT%H:%M:%S.%fZ') + timedelta(days=90)).timestamp()))")
+        threeMonthsLaterTimestamp=$(python -c "from datetime import datetime, timedelta; print(int((datetime.strptime('$secretEndDate', '%Y-%m-%dT%H:%M:%SZ') + timedelta(days=90)).timestamp()))")
 
 
 
