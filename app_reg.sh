@@ -53,8 +53,11 @@ check_expiring_secrets() {
         fi
 
         # Convert date to Unix timestamp
-        secretEndDateTimestamp=$(date -d "$secretEndDate" +%s)
-        threeMonthsLater=$(date -d "3 months" +%s)
+        secretEndDateTimestamp=$(date -d "$(echo "$secretEndDate" | sed 's/T/ /; s/\.[0-9]\+Z/Z/')" +%s)
+
+        # Calculate Unix timestamp for three months later
+        threeMonthsLater=$(date -d "$(date -d '+3 months' +%Y-%m-%d)" +%s)
+
 
         if [ "$secretEndDateTimestamp" -le "$threeMonthsLater" ]; then
             echo "A client secret for app '$appName' has expired or is about to expire on $secretEndDate. The owner is $secretOwner"
