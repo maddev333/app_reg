@@ -42,6 +42,8 @@ check_expiring_secrets() {
     apps=$(az ad app list --query "[].{id: appId, name: displayName}" -o tsv --all)
     # Initialize the email body
     email_body="<html><body><h2>Expiring Secret Notification</h2>"
+    recipients=""
+    
     while read -r appId appName  
     do
         #echo "Checking app $appName with ID: $appId"
@@ -108,15 +110,23 @@ fi
 if [ "$secretEndDateTimestamp" -le "$threeMonthsLaterTimestamp" ]; then
     echo "A client secret for app '$appName' has expired or is about to expire on $secretEndDate. The owner is $secretOwner"
     email_body+="<p>A client secret for app <strong>'$appName'</strong> has expired or is about to expire on <strong>$secretEndDate</strong>. The owner is <strong>$secretOwner</strong>.</p>"
-    # Add your code here for further actions (e.g., notification)
+    # Add the owner to the recipients list if not already present
+    if ! echo "$recipients" | grep -q "$secretOwner"; then
+                recipients+="$secretOwner,"
+    fi
 else
     echo "The secret for app '$appName' is not expired or about to expire."
 fi
    done <<< "$apps"  
+
+   # Remove trailing comma from recipients list
+   recipients=$(echo "$recipients" | sed 's/,$//')
+
    # Close the HTML body
    email_body+="</body></html>"
 
    # Output the HTML email body
+   echo "Recipients: $recipients"
    echo "$email_body"
 }
 
