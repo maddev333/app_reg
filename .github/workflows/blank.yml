@@ -49,5 +49,4 @@ jobs:
             az account list
             az account show
             ./app_reg.sh -c
-            az logout
 
