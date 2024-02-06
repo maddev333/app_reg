@@ -43,7 +43,7 @@ check_expiring_secrets() {
 
     while read -r appId appName  
     do
-        echo "Checking app $appName with ID: $appId"
+        #echo "Checking app $appName with ID: $appId"
         secretEndDate=$(az ad app credential list --id "$appId" -o tsv --query "[0].endDateTime")
         #echo "End date: $secretEndDate"
         secretOwner=$(az ad app owner list --id "$appId" -o tsv --query "[0].userPrincipalName")
