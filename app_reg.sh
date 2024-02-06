@@ -58,19 +58,42 @@ check_expiring_secrets() {
         # Calculate Unix timestamp for three months later
         #threeMonthsLater=$(date -d "$(date -d '+3 months' +%Y-%m-%d)" +%s)
         # Convert date to Unix timestamp using Python
-        secretEndDateTimestamp=$(python -c "from datetime import datetime, timedelta; print(int((datetime.strptime('$secretEndDate', '%Y-%m-%dT%H:%M:%SZ')).timestamp()))")
+secretEndDateTimestamp=$(python -c "
+from datetime import datetime, timedelta
+date_str = '$secretEndDate'
+try:
+    dt = datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%S.%fZ')
+except ValueError:
+    dt = datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%SZ')
+print(int(dt.timestamp()))
+")
 
-        # Calculate Unix timestamp for three months later using Python
-        threeMonthsLaterTimestamp=$(python -c "from datetime import datetime, timedelta; print(int((datetime.strptime('$secretEndDate', '%Y-%m-%dT%H:%M:%SZ') + timedelta(days=90)).timestamp()))")
+# Calculate Unix timestamp for three months later using Python
+threeMonthsLaterTimestamp=$(python -c "
+from datetime import datetime, timedelta
+date_str = '$secretEndDate'
+try:
+    dt = datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%S.%fZ')
+except ValueError:
+    dt = datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%SZ')
+three_months_later = dt + timedelta(days=90)
+print(int(three_months_later.timestamp()))
+")
 
+# Check if timestamps are integers before comparison
+if [ -z "$secretEndDateTimestamp" ] || [ -z "$threeMonthsLaterTimestamp" ]; then
+    echo "Invalid timestamp values."
+    exit 1
+fi
 
+# Compare timestamps
+if [ "$secretEndDateTimestamp" -le "$threeMonthsLaterTimestamp" ]; then
+    echo "A client secret for app '$appName' has expired or is about to expire on $secretEndDate. The owner is $secretOwner"
+    # Add your code here for further actions (e.g., notification)
+else
+    echo "The secret for app '$appName' is not expired or about to expire."
+fi
 
-        if [ "$secretEndDateTimestamp" -le "$threeMonthsLater" ]; then
-            echo "A client secret for app '$appName' has expired or is about to expire on $secretEndDate. The owner is $secretOwner"
-            # Add your code here for further actions (e.g., notification)
-        else
-            echo "The secret for app '$appName' is not expired or about to expire."
-        fi
     done
 }
 
