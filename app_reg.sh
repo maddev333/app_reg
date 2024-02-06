@@ -57,6 +57,7 @@ check_expiring_secrets() {
         #secretEndDateTimestamp=$(date -d "$(echo "$secretEndDate" | sed 's/T/ /; s/\.[0-9]\+Z/Z/')" +%s)
         #secretEndDateTimestamp=$(date -d "$(echo "$secretEndDate" | sed 's/T/ /; s/\([0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}\)\.\([0-9]\+\)Z/\1.\2/')")
         secretEndDateTimestamp=$(date -d "$(echo "$secretEndDate" | sed 's/T/ /; s/\.[0-9]\+Z/ /')" +%s)
+        
         #echo "Secret End Date: $secretEndDate"  
         #threeMonthsLater=$(date -d "3 months" +%s)  
         #threeMonthsLater=$(date -d "$(date -d '+3 months' +%Y-%m-%d)" +%s)
