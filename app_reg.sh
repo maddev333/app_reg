@@ -57,8 +57,17 @@ check_expiring_secrets() {
 
         # Calculate Unix timestamp for three months later
         #threeMonthsLater=$(date -d "$(date -d '+3 months' +%Y-%m-%d)" +%s)
-        # Format date using date command
+       # Check if the date string is not empty
+
+
+# Format date using date command
 formattedDate=$(date -d "$secretEndDate" --utc +"%Y-%m-%dT%H:%M:%S.%NZ")
+
+# Check if the formatted date string is not empty
+if [ -z "$formattedDate" ]; then
+    echo "Failed to format date. Skipping app '$appName'."
+    continue
+fi
 
 # Convert formatted date to Unix timestamp using Python
 secretEndDateTimestamp=$(python -c "
@@ -79,8 +88,8 @@ print(int(three_months_later.timestamp()))
 
 # Check if timestamps are integers before comparison
 if [ -z "$secretEndDateTimestamp" ] || [ -z "$threeMonthsLaterTimestamp" ]; then
-    echo "Invalid timestamp values."
-    exit 1
+    echo "Invalid timestamp values. Skipping app '$appName'."
+    continue
 fi
 
 # Compare timestamps
@@ -90,6 +99,7 @@ if [ "$secretEndDateTimestamp" -le "$threeMonthsLaterTimestamp" ]; then
 else
     echo "The secret for app '$appName' is not expired or about to expire."
 fi
+
 
 
 
