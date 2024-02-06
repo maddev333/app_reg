@@ -116,13 +116,8 @@ fi
    # Close the HTML body
    email_body+="</body></html>"
 
-   # Send email with the accumulated details
-   if [ -n "$email_body" ]; then
-       # Send email using curl with HTML content type
-       curl --url 'smtps://smtp.gmail.com:465' --ssl-reqd --mail-from 'from-email@gmail.com' --mail-rcpt '<recipient_email_address>' --user 'from-email@gmail.com:YourPassword' -H "Content-Type: text/html" -T <(echo "$email_body")
-   else
-       echo "No expiring secrets found."
-   fi
+   # Output the HTML email body
+   echo "$email_body"
 }
 
 
