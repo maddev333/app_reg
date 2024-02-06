@@ -42,6 +42,7 @@ check_expiring_secrets() {
     apps=$(az ad app list --query "[].{id: appId, name: displayName}" -o tsv --all)
 
     while read -r appId appName  
+    do
         echo "Checking app $appName with ID: $appId"
         secretEndDate=$(az ad app credential list --id "$appId" -o tsv --query "[0].endDateTime")
         echo "End date: $secretEndDate"
@@ -104,7 +105,7 @@ if [ "$secretEndDateTimestamp" -le "$threeMonthsLaterTimestamp" ]; then
 else
     echo "The secret for app '$appName' is not expired or about to expire."
 fi
-        done <<< "$apps"  
+   done <<< "$apps"  
 
 }
 
