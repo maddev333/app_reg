@@ -16,7 +16,7 @@ on:
       name:
         description: Application to update
         required: true
-      update_keyvault:
+      keyvault:
         type: boolean
         description: Update KeyVault
       append:
@@ -67,6 +67,15 @@ jobs:
               secret=$(az ad app credential reset --append --id "$applicationId" --years "2" --query "password" -o tsv --display-name ${{ github.event.inputs.name }})
             else
               secret=$(az ad app credential reset --id "$applicationId" --years "2" --query "password" -o tsv --display-name ${{ github.event.inputs.name }})
+              echo "$secret"
             fi
-            
+            if [ ${{ github.event.inputs.keyvault }} == 'true' ]; then
+              echo "Updating Keyvault"
+              az keyvault secret set --name "appreg-$1" --vault-name "$3" --value "$newSecret" 
+              if [ $? -ne 0 ]; then  
+                    echo "Error: Failed to update the secret in Azure KeyVault. Please check the KeyVault name and permissions." 
+                    echo "Please manually add to KeyVault" 
+                    return 1  
+              fi
+            fi
             #echo "${{ github.event.inputs.message }} ${{ fromJSON('["", "🥳"]')[github.event.inputs.use-emoji == 'true'] }} ${{ github.event.inputs.name }}"
