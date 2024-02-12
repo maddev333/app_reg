@@ -14,18 +14,14 @@ on:
   workflow_dispatch:
     inputs:
       name:
-        type: choice
-        description: Who to greet
-        options: 
-        - monalisa
-        - cschleiden
-      message:
+        description: Application to update
         required: true
-      use-emoji:
+      update_keyvault:
         type: boolean
-        description: Include 🎉🤣 emojis
-      environment:
-        type: environment
+        description: Update KeyVault
+      keyvault_name:
+        description: KeyVault Name
+      
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
