@@ -63,7 +63,7 @@ jobs:
             appRegistration=$(az ad app list --display-name ${{ github.event.inputs.name }} --query "[0]")
             applicationId=$(echo "$appRegistration" | jq -r '.appId')
             echo $applicationId
-            if [ ${{ github.event.inputs.append }} ]; then
+            if [ ${{ github.event.inputs.append }} == 'true' ]; then
               secret=$(az ad app credential reset --append --id "$applicationId" --years "2" --query "password" -o tsv --display-name ${{ github.event.inputs.name }})
             else
               secret=$(az ad app credential reset --id "$applicationId" --years "2" --query "password" -o tsv --display-name ${{ github.event.inputs.name }})
