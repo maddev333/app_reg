@@ -81,4 +81,5 @@ jobs:
                     return 1  
               fi
             fi
+            exit 0
             #echo "${{ github.event.inputs.message }} ${{ fromJSON('["", "🥳"]')[github.event.inputs.use-emoji == 'true'] }} ${{ github.event.inputs.name }}"
