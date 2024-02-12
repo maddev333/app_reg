@@ -75,11 +75,10 @@ jobs:
             #if [ ${{ github.event.inputs.keyvault }} == 'true' ]; then
             echo "Updating Keyvault"
             az keyvault secret set --name "appreg-${{ github.event.inputs.name }}" --vault-name "${{ github.event.inputs.keyvault }}" --value "$secret" 
-              if [ $? -ne 0 ]; then  
+            if [ $? -ne 0 ]; then  
                     echo "Error: Failed to update the secret in Azure KeyVault. Please check the KeyVault name and permissions." 
                     echo "Please manually add to KeyVault" 
                     return 1  
-              fi
             fi
             exit 0
             #echo "${{ github.event.inputs.message }} ${{ fromJSON('["", "🥳"]')[github.event.inputs.use-emoji == 'true'] }} ${{ github.event.inputs.name }}"
