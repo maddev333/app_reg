@@ -58,5 +58,6 @@ jobs:
             az account list
             az account show
             appRegistration=$(az ad app list --display-name ${{ github.event.inputs.name }} --query "[0]")
-            echo $appRegistration
+            applicationId=$(echo "$appRegistration" | jq -r '.appId')
+            echo $applicationId
             #echo "${{ github.event.inputs.message }} ${{ fromJSON('["", "🥳"]')[github.event.inputs.use-emoji == 'true'] }} ${{ github.event.inputs.name }}"
