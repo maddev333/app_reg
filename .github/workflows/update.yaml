@@ -65,6 +65,7 @@ jobs:
             echo $applicationId
             if [ ${{ github.event.inputs.append }} == 'true' ]; then
               secret=$(az ad app credential reset --append --id "$applicationId" --years "2" --query "password" -o tsv --display-name ${{ github.event.inputs.name }})
+              echo "$secret"
             else
               secret=$(az ad app credential reset --id "$applicationId" --years "2" --query "password" -o tsv --display-name ${{ github.event.inputs.name }})
               echo "$secret"
