@@ -61,4 +61,4 @@ jobs:
           inlineScript: |
             az account list
             az account show
-            ./app_reg.sh -c
+            echo "${{ github.event.inputs.message }} ${{ fromJSON('["", "🥳"]')[github.event.inputs.use-emoji == 'true'] }} ${{ github.event.inputs.name }}"
