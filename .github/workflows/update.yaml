@@ -22,9 +22,12 @@ on:
       append:
         type: boolean
         description: Append secret instead of overwrite
-      keyvault_name:
+      keyvault:
         description: KeyVault Name
-        required: true
+        type: choice
+        options: 
+        - mydtskeyvault
+        - cschleiden
       
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
