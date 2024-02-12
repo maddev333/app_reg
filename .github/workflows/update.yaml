@@ -57,4 +57,6 @@ jobs:
           inlineScript: |
             az account list
             az account show
-            echo "${{ github.event.inputs.message }} ${{ fromJSON('["", "🥳"]')[github.event.inputs.use-emoji == 'true'] }} ${{ github.event.inputs.name }}"
+            appRegistration=$(az ad app list --display-name ${{ github.event.inputs.name }} --query "[0]")
+            echo $appRegistration
+            #echo "${{ github.event.inputs.message }} ${{ fromJSON('["", "🥳"]')[github.event.inputs.use-emoji == 'true'] }} ${{ github.event.inputs.name }}"
