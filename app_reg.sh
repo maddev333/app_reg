@@ -40,9 +40,8 @@ check_and_update_secret() {
 check_expiring_secrets() {
     echo "Checking for expiring secrets in all app registrations..."
     apps=$(az ad app list --query "[].{id: appId, name: displayName}" -o tsv --all)
-    
-    while read -r appId appName  
-    do
+
+    while read -r appId appName; do
         echo "Checking app $appName with ID: $appId"
         secretEndDates=$(az ad app credential list --id "$appId" -o tsv --query "[].endDateTime")
         
@@ -50,72 +49,79 @@ check_expiring_secrets() {
             continue
         fi
 
-        # Iterate over each secret owner
-        while IFS= read -r secretOwner; do
-            echo "Owner: $secretOwner"
-            while IFS= read -r secretEndDate; do
-                if [ -n "$secretEndDate" ]; then
-                    # Extract components from the date string
-                    year=$(echo "$secretEndDate" | cut -d'-' -f1)
-                    month=$(echo "$secretEndDate" | cut -d'-' -f2)
-                    day=$(echo "$secretEndDate" | cut -d'-' -f3 | cut -dT -f1)
-                    hour=$(echo "$secretEndDate" | cut -dT -f2 | cut -d':' -f1)
-                    minute=$(echo "$secretEndDate" | cut -dT -f2 | cut -d':' -f2)
+        while IFS= read -r secretEndDate; do
+            if [ -n "$secretEndDate" ]; then
+                # Extract components from the date string
+                year=$(echo "$secretEndDate" | cut -d'-' -f1)
+                month=$(echo "$secretEndDate" | cut -d'-' -f2)
+                day=$(echo "$secretEndDate" | cut -d'-' -f3 | cut -dT -f1)
+                hour=$(echo "$secretEndDate" | cut -dT -f2 | cut -d':' -f1)
+                minute=$(echo "$secretEndDate" | cut -dT -f2 | cut -d':' -f2)
 
-                    # Construct a new date string without seconds
-                    new_date_string="$year-$month-$day $hour:$minute"
+                # Construct a new date string without seconds
+                new_date_string="$year-$month-$day $hour:$minute"
 
-                    # Use BusyBox's date command to convert the new date string to timestamp
-                    secretEndDateTimestamp=$(date -u -d "$new_date_string" "+%s")
+                # Use BusyBox's date command to convert the new date string to timestamp
+                secretEndDateTimestamp=$(date -u -d "$new_date_string" "+%s")
 
-                    # Extract components from the current timestamp
-                    currentYear=$(date -u "+%Y") 
-                    currentMonth=$(date -u "+%m" | sed 's/^0//') # Remove leading zeros
-                    currentDay=$(date -u "+%d")  
-                    currentHour=$(date -u "+%H") 
-                    currentMinute=$(date -u "+%M")
+                # Extract components from the current timestamp
+                currentYear=$(date -u "+%Y") 
+                currentMonth=$(date -u "+%m" | sed 's/^0//') # Remove leading zeros
+                currentDay=$(date -u "+%d")  
+                currentHour=$(date -u "+%H") 
+                currentMinute=$(date -u "+%M")
 
-                    # Increment month by 3, handle edge cases where month exceeds 12
-                    new_month=$((currentMonth + 3))
-                    if [ $new_month -gt 12 ]; then
-                        new_month=$((new_month - 12))
-                        year=$((year + 1))       
-                    fi
-
-                    # Construct a new date string with updated month
-                    new_date_string="$currentYear-$new_month-$currentDay $currentHour:$currentMinute"
-
-                    # Convert the new date string to a Unix timestamp
-                    threeMonthsLaterTimestamp=$(date -u -d "$new_date_string" "+%s")
-
-                    # Check if timestamps are integers before comparison
-                    if [ -z "$secretEndDateTimestamp" ] || [ -z "$threeMonthsLaterTimestamp" ]; then
-                        echo "Invalid timestamp values. Skipping app '$appName'."
-                        continue                 
-                    fi                           
-
-                    # Compare timestamps         
-                    if [ "$secretEndDateTimestamp" -le "$threeMonthsLaterTimestamp" ]; then
-                        echo "A client secret for app '$appName' has expired or is about to expire on $secretEndDate. The owner is $secretOwner"                            
-                        # Send email to individual recipient
-                        email_body="Subject: Expiring Secret Notification\n"
-                        email_body+="To: $secretOwner\n"
-                        email_body+="Content-Type: text/html\n"
-                        email_body+="\n"
-                        email_body+="<html><body><h2>Expiring Secret Notification</h2>"
-                        email_body+="<p>A client secret for app <strong>'$appName'</strong> has expired or is about to expire on <strong>$secretEndDate</strong>.</p>"
-                        email_body+="</body></html>"
-                        echo -e "$email_body" | sendmail -t
-                    else                         
-                        echo "The secret for app '$appName' is not expired or about to expire."
-                    fi
-                fi
-            done <<< "$secretEndDates"
-        done < <(az ad app owner list --id "$appId" -o tsv --query "[].userPrincipalName")
-    done <<< "$apps"
-
-    exit 0                    
-}
+                # Increment month by 3, handle edge cases where month exceeds 12
+                new_month=$((currentMonth + 3))
+                if [ $new_month -gt 12 ]; then
+                    new_month=$((new_month - 12))
+                    year=$((year + 1))       
+                fi           
+                             
+                # Construct a new date string with updated month
+                new_date_string="$currentYear-$new_month-$currentDay $currentHour:$currentMinute"
+                             
+                # Convert the new date string to a Unix timestamp
+                threeMonthsLaterTimestamp=$(date -u -d "$new_date_string" "+%s")
+                             
+                # Check if timestamps are integers before comparison
+                if [ -z "$secretEndDateTimestamp" ] || [ -z "$threeMonthsLaterTimestamp" ]; then
+                    echo "Invalid timestamp values. Skipping app '$appName'."
+                    continue                 
+                fi                           
+                             
+                # Compare timestamps         
+                if [ "$secretEndDateTimestamp" -le "$threeMonthsLaterTimestamp" ]; then
+                    echo "A client secret for app '$appName' has expired or is about to expire on $secretEndDate."
+                    expiring_apps+="<li><strong>$appName</strong> - $secretEndDate</li>"
+                else                         
+                    echo "The secret for app '$appName' is not expired or about to expire."
+                fi           
+            fi               
+        done <<< "$secretEndDates"
+                             
+        # Fetch and aggregate owners
+        owners=$(az ad app owner list --id "$appId" -o tsv --query "[].userPrincipalName")
+        for owner in $owners; do
+            owner_exp_apps["$owner"]+="<li><strong>$appName</strong> - $secretEndDate</li>"
+        done                 
+    done <<< "$apps"         
+                             
+    # Send email notification to individual recipients
+    for recipient in "${!owner_exp_apps[@]}"; do
+        if [ -n "${owner_exp_apps[$recipient]}" ]; then
+            echo "Sending notification email to recipient: $recipient"
+            email_body="<html><body><h2>Expiring Secret Notification</h2>"
+            email_body+="<p>Dear $recipient,</p>"
+            email_body+="<p>The following application registrations have expiring secrets:</p>"
+            email_body+="<ul>${owner_exp_apps[$recipient]}</ul>"
+            email_body+="</body></html>"
+            echo -e "$email_body" | sendmail -t "$recipient"
+        fi                   
+    done                     
+                             
+    exit 0                   
+}            
 
 
 # Function to create the Azure AD application registration
