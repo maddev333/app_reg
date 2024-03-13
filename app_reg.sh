@@ -40,7 +40,10 @@ check_and_update_secret() {
 check_expiring_secrets() {
     echo "Checking for expiring secrets in all app registrations..."
     apps=$(az ad app list --query "[].{id: appId, name: displayName}" -o tsv --all)
-
+    
+    # Initialize an array to store owners
+    declare -a owners
+    
     while read -r appId appName; do
         echo "Checking app $appName with ID: $appId"
         secretEndDates=$(az ad app credential list --id "$appId" -o tsv --query "[].endDateTime")
@@ -101,16 +104,21 @@ check_expiring_secrets() {
         done <<< "$secretEndDates"
                              
         # Fetch and aggregate owners
-        owners=$(az ad app owner list --id "$appId" -o tsv --query "[].userPrincipalName")
-        for owner in "$owners"; do
-            echo $owner
-            if [ -n "$owner" ]; then
-               temp="${owner_exp_apps["$owner"]}<li><strong>$appName</strong> - $secretEndDate</li>"
-               echo $temp
-               owner_exp_apps["$owner"]=$temp
-            fi
-        done                 
+        #owners=$(az ad app owner list --id "$appId" -o tsv --query "[].userPrincipalName")
+        #for owner in "$owners"; do
+        #    echo $owner
+        #    if [ -n "$owner" ]; then
+        #       temp="${owner_exp_apps["$owner"]}<li><strong>$appName</strong> - $secretEndDate</li>"
+        #       echo $temp
+        #       owner_exp_apps["$owner"]=$temp
+        #    fi
+        #done                 
 
+
+        # Read the output of the command line by line and add each owner to the array
+        while IFS= read -r owner; do
+          owners+=("$owner")
+        done < <(az ad app owner list --id "$appId" -o tsv --query "[].userPrincipalName")
 
     done <<< "$apps"         
                              
