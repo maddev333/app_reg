@@ -54,17 +54,33 @@ check_expiring_secrets() {
 
         while IFS= read -r secretEndDate; do
             if [ -n "$secretEndDate" ]; then
-                # Construct a new date string without seconds
-                new_date_string=$(date -u -d "$secretEndDate" "+%F %R")
+                # Extract components from the date string
+                year=$(echo "$secretEndDate" | cut -d'-' -f1)
+                month=$(echo "$secretEndDate" | cut -d'-' -f2)
+                day=$(echo "$secretEndDate" | cut -d'-' -f3 | cut -dT -f1)
+                hour=$(echo "$secretEndDate" | cut -dT -f2 | cut -d':' -f1)
+                minute=$(echo "$secretEndDate" | cut -dT -f2 | cut -d':' -f2)
 
-                # Increment current month by 3, handling edge cases where month exceeds 12
-                new_month=$((10#$(date -u "+%m") + 3))
+                # Construct a new date string without seconds
+                new_date_string="$year-$month-$day $hour:$minute"
+
+                # Use BusyBox's date command to convert the new date string to timestamp
+                secretEndDateTimestamp=$(date -u -d "$new_date_string" "+%s")
+
+                # Extract components from the current timestamp
                 currentYear=$(date -u "+%Y") 
+                currentMonth=$(date -u "+%m" | sed 's/^0//') # Remove leading zeros
+                currentDay=$(date -u "+%d")  
+                currentHour=$(date -u "+%H") 
+                currentMinute=$(date -u "+%M")
+
+                # Increment month by 3, handle edge cases where month exceeds 12
+                new_month=$((currentMonth + 3))
                 if [ $new_month -gt 12 ]; then
                     new_month=$((new_month - 12))
                     year=$((year + 1))       
-                fi
-
+                fi           
+                             
                 # Construct a new date string with updated month
                 new_date_string="$currentYear-$new_month-$currentDay $currentHour:$currentMinute"
                              
@@ -87,37 +103,54 @@ check_expiring_secrets() {
             fi               
         done <<< "$secretEndDates"
                              
+        # Fetch and aggregate owners
+        #owners=$(az ad app owner list --id "$appId" -o tsv --query "[].userPrincipalName")
+        #for owner in "$owners"; do
+        #    echo $owner
+        #    if [ -n "$owner" ]; then
+        #       temp="${owner_exp_apps["$owner"]}<li><strong>$appName</strong> - $secretEndDate</li>"
+        #       echo $temp
+        #       owner_exp_apps["$owner"]=$temp
+        #    fi
+        #done                 
+
+
         # Read the output of the command line by line and add each owner to the array
         while IFS= read -r owner; do
-            echo "$owner"
-            # Use an array to store owners associated with the app
-            owner_exp_apps["$appName"]+=" $owner"
+         echo "$owner"
+         #owner_exp_apps["$owner"]=$owner  # Add the owner to the array using the owner as the key
+         owner_exp_apps["$owner"]="$appName - $secretEndDate"
+          for key in "${!owner_exp_apps[@]}"; do  # Iterate over keys using "${!owner_exp_apps[@]}"
+            echo "key: $key"
+          done
         done < <(az ad app owner list --id "$appId" -o tsv --query "[].userPrincipalName")
 
+    
     done <<< "$apps"         
 
+   
     # Send email notification to individual recipients
     if [ -n "$expiring_apps" ]; then
-        echo "Sending notification"
-        for recipient in "${!owner_exp_apps[@]}"; do
-            echo $recipient
-            if [ -n "${owner_exp_apps[$recipient]}" ]; then
-                echo "Sending notification email to recipient: $recipient"
-                email_body="<html><body><h2>Expiring Secret Notification</h2>"
-                email_body+="<p>Dear $recipient,</p>"
-                email_body+="<p>The following application registrations have expiring secrets:</p>"
-                email_body+="<ul>${expiring_apps}</ul>"
-                email_body+="</body></html>"
-                #echo -e "$email_body" | sendmail -t "$recipient"
-                echo -e "$email_body"
-            fi                   
-        done                     
+      echo "Sending notification"
+      declare -p owner_exp_apps
+      for recipient in "${!owner_exp_apps[@]}"; do
+        echo $recipient
+        if [ -n "${owner_exp_apps[$recipient]}" ]; then
+            echo "Sending notification email to recipient: $recipient"
+            email_body="<html><body><h2>Expiring Secret Notification</h2>"
+            email_body+="<p>Dear $recipient,</p>"
+            email_body+="<p>The following application registrations have expiring secrets:</p>"
+            email_body+="<ul>${owner_exp_apps[$recipient]}</ul>"
+            email_body+="</body></html>"
+            #echo -e "$email_body" | sendmail -t "$recipient"
+            echo -e "$email_body"
+        fi                   
+      done                     
     else
         echo "No expiring app registrations found. No notification sent."
-    fi
-
+    fi                       
     exit 0                   
-}         
+}     
 
 
 # Function to create the Azure AD application registration
