@@ -101,14 +101,21 @@ check_expiring_secrets() {
         done <<< "$secretEndDates"
                              
         # Fetch and aggregate owners
-        owners=$(az ad app owner list --id "$appId" -o tsv --query "[].userPrincipalName")
+        #owners=$(az ad app owner list --id "$appId" -o tsv --query "[].userPrincipalName")
         #for owner in "$owners"; do
         #    owner_exp_apps["$owner"]+="<li><strong>$appName</strong> - $secretEndDate</li>"
         #done                 
 
-        while IFS= read -r owner; do
+        #while IFS= read -r owner; do
+        #   owner_exp_apps["$owner"]+="<li><strong>$appName</strong> - $secretEndDate</li>"
+        #done <<< "$owners"
+        # Fetch and store owners in an array
+        mapfile -t owners < <(az ad app owner list --id "$appId" -o tsv --query "[].userPrincipalName")
+
+        # Iterate over the array of owners
+        for owner in "${owners[@]}"; do
            owner_exp_apps["$owner"]+="<li><strong>$appName</strong> - $secretEndDate</li>"
-        done <<< "$owners"
+        done
     done <<< "$apps"         
                              
     # Send email notification to individual recipients
