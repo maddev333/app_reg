@@ -104,7 +104,9 @@ check_expiring_secrets() {
         owners=$(az ad app owner list --id "$appId" -o tsv --query "[].userPrincipalName")
         for owner in "$owners"; do
             echo $owner
-            owner_exp_apps["$owner"]+="<li><strong>$appName</strong> - $secretEndDate</li>"
+            if [ -n "$owner" ]; then
+               owner_exp_apps["$owner"]+="<li><strong>$appName</strong> - $secretEndDate</li>"
+            fi
         done                 
 
 
