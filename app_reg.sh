@@ -105,7 +105,8 @@ check_expiring_secrets() {
         for owner in "$owners"; do
             echo $owner
             if [ -n "$owner" ]; then
-               owner_exp_apps["$owner"]+="<li><strong>$appName</strong> - $secretEndDate</li>"
+               temp="${owner_exp_apps["$owner"]}<li><strong>$appName</strong> - $secretEndDate</li>"
+               owner_exp_apps["$owner"]=$temp
             fi
         done                 
 
