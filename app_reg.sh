@@ -122,7 +122,11 @@ check_expiring_secrets() {
         done < <(az ad app owner list --id "$appId" -o tsv --query "[].userPrincipalName")
 
     done <<< "$apps"         
-                             
+
+    echo "Keys of owner_exp_apps array:"
+    for key in "${!owner_exp_apps[@]}"; do
+      echo "$key"
+    done
     # Send email notification to individual recipients
     echo "Sending notification"
     declare -p owner_exp_apps
