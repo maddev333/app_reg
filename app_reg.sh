@@ -124,6 +124,7 @@ check_expiring_secrets() {
     done <<< "$apps"         
                              
     # Send email notification to individual recipients
+    echo "Sending notification"
     for recipient in "${!owner_exp_apps[@]}"; do
         echo $recipient
         if [ -n "${owner_exp_apps[$recipient]}" ]; then
