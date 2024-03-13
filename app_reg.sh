@@ -119,12 +119,11 @@ check_expiring_secrets() {
         while IFS= read -r owner; do
           echo "$owner"
           owners_exp_apps+=("$owner")
+          for key in "${!owner_exp_apps[@]}"; do
+           echo "key: $key"
+          done
         done < <(az ad app owner list --id "$appId" -o tsv --query "[].userPrincipalName")
 
-        echo "Keys of owner_exp_apps array:"
-        for key in "${!owner_exp_apps[@]}"; do
-          echo "$key"
-        done
     
     done <<< "$apps"         
 
