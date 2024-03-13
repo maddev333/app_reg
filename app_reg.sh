@@ -42,7 +42,7 @@ check_expiring_secrets() {
     apps=$(az ad app list --query "[].{id: appId, name: displayName}" -o tsv --all)
     
     # Initialize an array to store owners
-    declare -a owners
+    declare -A owner_exp_apps
     
     while read -r appId appName; do
         echo "Checking app $appName with ID: $appId"
