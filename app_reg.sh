@@ -117,6 +117,7 @@ check_expiring_secrets() {
 
         # Read the output of the command line by line and add each owner to the array
         while IFS= read -r owner; do
+          echo "$owner"
           owners_exp_apps+=("$owner")
         done < <(az ad app owner list --id "$appId" -o tsv --query "[].userPrincipalName")
 
