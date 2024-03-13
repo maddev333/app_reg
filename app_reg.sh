@@ -118,7 +118,8 @@ check_expiring_secrets() {
         # Read the output of the command line by line and add each owner to the array
         while IFS= read -r owner; do
          echo "$owner"
-         owner_exp_apps["$owner"]=$owner  # Add the owner to the array using the owner as the key
+         #owner_exp_apps["$owner"]=$owner  # Add the owner to the array using the owner as the key
+         owner_exp_apps["$owner"]="$appName - $secretEndDate"
           for key in "${!owner_exp_apps[@]}"; do  # Iterate over keys using "${!owner_exp_apps[@]}"
             echo "key: $key"
           done
