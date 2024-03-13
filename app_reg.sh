@@ -112,7 +112,9 @@ check_expiring_secrets() {
         # Fetch and store owners in an array
         # Fetch and store owners in an array
         while IFS= read -r owner; do
+         if [ -n "$owner" ]; then
            owner_exp_apps["$owner"]+="<li><strong>$appName</strong> - $secretEndDate</li>"
+         fi
         done < <(az ad app owner list --id "$appId" -o tsv --query "[].userPrincipalName")
 
     done <<< "$apps"         
