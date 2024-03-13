@@ -140,7 +140,8 @@ check_expiring_secrets() {
             email_body+="<p>The following application registrations have expiring secrets:</p>"
             email_body+="<ul>${owner_exp_apps[$recipient]}</ul>"
             email_body+="</body></html>"
-            echo -e "$email_body" | sendmail -t "$recipient"
+            #echo -e "$email_body" | sendmail -t "$recipient"
+            echo -e "$email_body"
         fi                   
     done                     
                              
