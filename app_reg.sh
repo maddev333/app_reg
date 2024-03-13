@@ -110,12 +110,17 @@ check_expiring_secrets() {
         #   owner_exp_apps["$owner"]+="<li><strong>$appName</strong> - $secretEndDate</li>"
         #done <<< "$owners"
         # Fetch and store owners in an array
-        mapfile -t owners < <(az ad app owner list --id "$appId" -o tsv --query "[].userPrincipalName")
+        owners=$(az ad app owner list --id "$appId" -o tsv --query "[].userPrincipalName")
 
-        # Iterate over the array of owners
-        for owner in "${owners[@]}"; do
-           owner_exp_apps["$owner"]+="<li><strong>$appName</strong> - $secretEndDate</li>"
+        # Debug statement to check the content of $owners
+        echo "Owners fetched from Azure AD:"
+        echo "$owners"
+
+        # Iterate over the list of owners
+        for owner in $owners; do
+          owner_exp_apps["$owner"]+="<li><strong>$appName</strong> - $secretEndDate</li>"
         done
+
     done <<< "$apps"         
                              
     # Send email notification to individual recipients
