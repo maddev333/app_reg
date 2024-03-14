@@ -103,53 +103,39 @@ check_expiring_secrets() {
             fi               
         done <<< "$secretEndDates"
                              
-        # Fetch and aggregate owners
-        #owners=$(az ad app owner list --id "$appId" -o tsv --query "[].userPrincipalName")
-        #for owner in "$owners"; do
-        #    echo $owner
-        #    if [ -n "$owner" ]; then
-        #       temp="${owner_exp_apps["$owner"]}<li><strong>$appName</strong> - $secretEndDate</li>"
-        #       echo $temp
-        #       owner_exp_apps["$owner"]=$temp
-        #    fi
-        #done                 
-
-
-        # Read the output of the command line by line and add each owner to the array
-        while IFS= read -r owner; do
-         echo "$owner"
-         #owner_exp_apps["$owner"]=$owner  # Add the owner to the array using the owner as the key
-         owner_exp_apps["$owner"]="$appName - $secretEndDate"
-          for key in "${!owner_exp_apps[@]}"; do  # Iterate over keys using "${!owner_exp_apps[@]}"
-            echo "key: $key"
-          done
-        done < <(az ad app owner list --id "$appId" -o tsv --query "[].userPrincipalName")
-
-    
-    done <<< "$apps"         
-
-   
-    # Send email notification to individual recipients
-    if [ -n "$expiring_apps" ]; then
-      echo "Sending notification"
-      declare -p owner_exp_apps
-      for recipient in "${!owner_exp_apps[@]}"; do
-        echo $recipient
-        if [ -n "${owner_exp_apps[$recipient]}" ]; then
-            echo "Sending notification email to recipient: $recipient"
-            email_body="<html><body><h2>Expiring Secret Notification</h2>"
-            email_body+="<p>Dear $recipient,</p>"
-            email_body+="<p>The following application registrations have expiring secrets:</p>"
-            email_body+="<ul>${expiring_apps}</ul>"
-            email_body+="</body></html>"
-            #echo -e "$email_body" | sendmail -t "$recipient"
-            echo -e "$email_body"
-        fi                   
-      done                     
-    else
-        echo "No expiring app registrations found. No notification sent."
-    fi                       
-    exit 0                   
+       # Fetch and aggregate owners  
+        if [ -n "$expiring_apps" ]; then  
+            while IFS= read -r owner; do  
+                echo "$owner"  
+                if [ -n "$owner" ]; then  
+                    temp="${owner_exp_apps["$owner"]}$expiring_apps"  
+                    owner_exp_apps["$owner"]=$temp  
+                fi  
+            done < <(az ad app owner list --id "$appId" -o tsv --query "[].userPrincipalName")  
+        fi  
+    done <<< "$apps"           
+  
+    # Send email notification to individual recipients  
+    if [ ${#owner_exp_apps[@]} -gt 0 ]; then  
+      echo "Sending notification"  
+      for recipient in "${!owner_exp_apps[@]}"; do  
+        echo $recipient  
+        if [ -n "${owner_exp_apps[$recipient]}" ]; then  
+            echo "Sending notification email to recipient: $recipient"  
+            email_body="<html><body><h2>Expiring Secret Notification</h2>"  
+            email_body+="<p>Dear $recipient,</p>"  
+            email_body+="<p>The following application registrations have expiring secrets:</p>"  
+            email_body+="<ul>${owner_exp_apps[$recipient]}</ul>"  
+            email_body+="</body></html>"  
+            # Uncomment to send email  
+            # echo -e "$email_body" | sendmail -t "$recipient"  
+            echo -e "$email_body"  
+        fi                     
+      done                       
+    else  
+        echo "No expiring app registrations found. No notification sent."  
+    fi                         
+    exit 0                     
 }     
 
 
