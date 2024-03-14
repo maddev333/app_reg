@@ -89,20 +89,20 @@ check_expiring_secrets() {
                              
                 # Check if timestamps are integers before comparison
                 if [ -z "$secretEndDateTimestamp" ] || [ -z "$threeMonthsLaterTimestamp" ]; then
-                    echo "Invalid timestamp values. Skipping app '$appName'."
+                    #echo "Invalid timestamp values. Skipping app '$appName'."
                     continue                 
                 fi                           
                              
                 # Compare timestamps         
                 if [ "$secretEndDateTimestamp" -le "$threeMonthsLaterTimestamp" ]; then
-                    echo "A client secret for app '$appName' has expired or is about to expire on $secretEndDate."
+                    #echo "A client secret for app '$appName' has expired or is about to expire on $secretEndDate."
                     expiring_apps+="<li><strong>$appName</strong> - $secretEndDate</li>"
                  # Fetch owners and associate with the expiring secret  
                     while IFS= read -r owner; do  
-                        echo "$owner"  
+                        #echo "$owner"  
                         owner_exp_apps["$owner"]="$appName - $secretEndDate"
                           for key in "${!owner_exp_apps[@]}"; do  # Iterate over keys using "${!owner_exp_apps[@]}"
-                           echo "key: $key"
+                           #echo "key: $key"
                           done
                         done < <(az ad app owner list --id "$appId" -o tsv --query "[].userPrincipalName")
  
