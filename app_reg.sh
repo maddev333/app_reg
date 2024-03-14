@@ -97,23 +97,20 @@ check_expiring_secrets() {
                 if [ "$secretEndDateTimestamp" -le "$threeMonthsLaterTimestamp" ]; then
                     echo "A client secret for app '$appName' has expired or is about to expire on $secretEndDate."
                     expiring_apps+="<li><strong>$appName</strong> - $secretEndDate</li>"
-                else                         
-                    echo "The secret for app '$appName' is not expired or about to expire."
-                fi           
-            fi               
-        done <<< "$secretEndDates"
-                             
-       # Fetch and aggregate owners  
-        if [ -n "$expiring_apps" ]; then  
-            while IFS= read -r owner; do  
-                echo "$owner"  
-                if [ -n "$owner" ]; then  
-                    temp="${owner_exp_apps["$owner"]}$expiring_apps"  
-                    owner_exp_apps["$owner"]=$temp  
-                fi  
-            done < <(az ad app owner list --id "$appId" -o tsv --query "[].userPrincipalName")  
-        fi  
-    done <<< "$apps"           
+                 # Fetch owners and associate with the expiring secret  
+                    while IFS= read -r owner; do  
+                        echo "$owner"  
+                        if [ -n "$owner" ]; then  
+                            temp="${owner_exp_apps["$owner"]}$expiring_secret"  
+                            owner_exp_apps["$owner"]=$temp  
+                        fi  
+                    done < <(az ad app owner list --id "$appId" -o tsv --query "[].userPrincipalName")  
+                else                           
+                    echo "The secret for app '$appName' is not expired or about to expire."  
+                fi             
+            fi                 
+        done <<< "$secretEndDates"  
+    done <<< "$apps"              
   
     # Send email notification to individual recipients  
     if [ ${#owner_exp_apps[@]} -gt 0 ]; then  
@@ -136,7 +133,7 @@ check_expiring_secrets() {
         echo "No expiring app registrations found. No notification sent."  
     fi                         
     exit 0                     
-}     
+}      
 
 
 # Function to create the Azure AD application registration
