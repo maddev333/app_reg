@@ -100,11 +100,12 @@ check_expiring_secrets() {
                  # Fetch owners and associate with the expiring secret  
                     while IFS= read -r owner; do  
                         echo "$owner"  
-                        if [ -n "$owner" ]; then  
-                            temp="${owner_exp_apps["$owner"]}$expiring_secret"  
-                            owner_exp_apps["$owner"]=$temp  
-                        fi  
-                    done < <(az ad app owner list --id "$appId" -o tsv --query "[].userPrincipalName")  
+                        owner_exp_apps["$owner"]="$appName - $secretEndDate"
+                          for key in "${!owner_exp_apps[@]}"; do  # Iterate over keys using "${!owner_exp_apps[@]}"
+                           echo "key: $key"
+                          done
+                        done < <(az ad app owner list --id "$appId" -o tsv --query "[].userPrincipalName")
+ 
                 else                           
                     echo "The secret for app '$appName' is not expired or about to expire."  
                 fi             
