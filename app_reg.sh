@@ -114,7 +114,7 @@ check_expiring_secrets() {
 
         # Check for expiring certificates
         certEndDates=$(az ad app credential list --id "$appId" --query "[?type=='AsymmetricX509Cert'].endDateTime" -o tsv)
-        echo "Checking for expiring certificates"
+        echo "Checking for expiring certificates for $appId - $certEndDates"
         if [ -n "$certEndDates" ]; then
             while IFS= read -r certEndDate; do
                 # Process expiration date of certificates
