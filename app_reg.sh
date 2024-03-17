@@ -115,20 +115,31 @@ check_expiring_secrets() {
         # Check for expiring certificates
         certEndDates=$(az ad app credential list --id "$appId" --cert -o tsv --query "[].endDateTime")
         echo "Checking for expiring certificates for $appId - $certEndDates"
-        if [ -n "$certEndDates" ]; then
-            while IFS= read -r certEndDate; do
+        while IFS= read -r certEndDate; do
+                # Extract components from the date string
+                year=$(echo "$certEndDates" | cut -d'-' -f1)
+                month=$(echo "$certEndDates" | cut -d'-' -f2)
+                day=$(echo "$certEndDates" | cut -d'-' -f3 | cut -dT -f1)
+                hour=$(echo "$certEndDates" | cut -dT -f2 | cut -d':' -f1)
+                minute=$(echo "$certEndDates" | cut -dT -f2 | cut -d':' -f2)
+
+                # Construct a new date string without seconds
+                new_date_string="$year-$month-$day $hour:$minute"
+
+                # Use BusyBox's date command to convert the new date string to timestamp
+                certEndDatesTimestamp=$(date -u -d "$new_date_string" "+%s")
+                
                 # Process expiration date of certificates
                 # (Similar processing as before)
                 # Add expiring certificate to array
-                if [ "$certEndDate" ]; then
-                    echo "$threeMonthsLaterTimestamp"
-                    if [ "$certEndDate" -le "$threeMonthsLaterTimestamp" ]; then
+                if [ "$certEndDatesTimestamp" ]; then
+                    if [ "$certEndDatesTimestamp" -le "$threeMonthsLaterTimestamp" ]; then
                        expiring_certificates["$appName - Certificate"]="$certEndDate"
                        echo "$expiring_certificates"
                     fi
                 fi
-            done <<< "$certEndDates"
-        fi
+        done <<< "$certEndDates"
+        
         
     done <<< "$apps"              
 
