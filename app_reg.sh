@@ -121,11 +121,11 @@ check_expiring_secrets() {
 
         while IFS= read -r certEndDate; do
                 # Extract components from the date string
-                year=$(echo "$certEndDates" | cut -d'-' -f1)
-                month=$(echo "$certEndDates" | cut -d'-' -f2)
-                day=$(echo "$certEndDates" | cut -d'-' -f3 | cut -dT -f1)
-                hour=$(echo "$certEndDates" | cut -dT -f2 | cut -d':' -f1)
-                minute=$(echo "$certEndDates" | cut -dT -f2 | cut -d':' -f2)
+                year=$(echo "$certEndDate" | cut -d'-' -f1)
+                month=$(echo "$certEndDate" | cut -d'-' -f2)
+                day=$(echo "$certEndDate" | cut -d'-' -f3 | cut -dT -f1)
+                hour=$(echo "$certEndDate" | cut -dT -f2 | cut -d':' -f1)
+                minute=$(echo "$certEndDate" | cut -dT -f2 | cut -d':' -f2)
 
                 # Construct a new date string without seconds
                 new_date_string="$year-$month-$day $hour:$minute"
