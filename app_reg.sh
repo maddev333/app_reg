@@ -138,23 +138,22 @@ check_expiring_secrets() {
                 # Add expiring certificate to array
                 if [ "$certEndDatesTimestamp" ]; then
                     if [ "$certEndDatesTimestamp" -le "$threeMonthsLaterTimestamp" ]; then
-                       expiring_certificates["$appName - Certificate"]="$certEndDate"
-                       echo "$expiring_certificates"
+                       while IFS= read -r owner; do  
+                        #echo "$owner"  
+                        owner_exp_apps["$owner"]="$appName - Certificate $certEndDate"
+                          #for key in "${!owner_exp_apps[@]}"; do  # Iterate over keys using "${!owner_exp_apps[@]}"
+                           #echo "key: $key"
+                          #done
+                        done < <(az ad app owner list --id "$appId" -o tsv --query "[].userPrincipalName")
                     fi
                 fi
         done <<< "$certEndDates"
         
         
     done <<< "$apps"              
-
-    # Combine expiring secrets and certificates
-    declare -A expiring_items
-    expiring_items=("${owner_exp_apps[@]}" "${expiring_certificates[@]}")
-    echo "$expiring_items"
   
     # Send email notification to individual recipients  
     if [ ${#owner_exp_apps[@]} -gt 0 ]; then  
-    #if [ ${#expiring_items[@]} -gt 0 ]; then
       echo "Sending notification"  
       for recipient in "${!owner_exp_apps[@]}"; do  
         echo $recipient  
@@ -164,9 +163,6 @@ check_expiring_secrets() {
             email_body+="<p>Dear $recipient,</p>"  
             email_body+="<p>The following application registrations have expiring secrets:</p>"  
             email_body+="<ul>${owner_exp_apps[$recipient]}</ul>"  
-            #for item in "${!expiring_items[@]}"; do
-            #        email_body+="<li><strong>$item</strong> - ${expiring_items[$item]}</li>"
-            #done
             email_body+="</body></html>"  
             # Uncomment to send email  
             # echo -e "$email_body" | sendmail -t "$recipient"  
