@@ -111,6 +111,20 @@ check_expiring_secrets() {
                 fi             
             fi                 
         done <<< "$secretEndDates"  
+
+        # Check for expiring certificates
+        certEndDates=$(az ad app credential list --id "$appId" --query "[?type=='AsymmetricX509Cert'].endDateTime" -o tsv)
+        if [ -n "$certEndDates" ]; then
+            while IFS= read -r certEndDate; do
+                # Process expiration date of certificates
+                # (Similar processing as before)
+                # Add expiring certificate to array
+                if [ "$certEndDate" ]; then
+                    expiring_certificates["$appName - Certificate"]="$certEndDate"
+                fi
+            done <<< "$certEndDates"
+        fi
+        
     done <<< "$apps"              
   
     # Send email notification to individual recipients  
