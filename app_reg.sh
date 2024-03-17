@@ -163,10 +163,10 @@ check_expiring_secrets() {
             email_body="<html><body><h2>Expiring Secret Notification</h2>"  
             email_body+="<p>Dear $recipient,</p>"  
             email_body+="<p>The following application registrations have expiring secrets:</p>"  
-            #email_body+="<ul>${owner_exp_apps[$recipient]}</ul>"  
-            for item in "${!expiring_items[@]}"; do
-                    email_body+="<li><strong>$item</strong> - ${expiring_items[$item]}</li>"
-            done
+            email_body+="<ul>${owner_exp_apps[$recipient]}</ul>"  
+            #for item in "${!expiring_items[@]}"; do
+            #        email_body+="<li><strong>$item</strong> - ${expiring_items[$item]}</li>"
+            #done
             email_body+="</body></html>"  
             # Uncomment to send email  
             # echo -e "$email_body" | sendmail -t "$recipient"  
