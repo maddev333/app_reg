@@ -127,9 +127,14 @@ check_expiring_secrets() {
         fi
         
     done <<< "$apps"              
+
+    # Combine expiring secrets and certificates
+    declare -A expiring_items
+    expiring_items=("${expiring_apps[@]}" "${expiring_certificates[@]}")
   
     # Send email notification to individual recipients  
-    if [ ${#owner_exp_apps[@]} -gt 0 ]; then  
+    #if [ ${#owner_exp_apps[@]} -gt 0 ]; then  
+    if [ ${#expiring_items[@]} -gt 0 ]; then
       echo "Sending notification"  
       for recipient in "${!owner_exp_apps[@]}"; do  
         echo $recipient  
@@ -138,7 +143,10 @@ check_expiring_secrets() {
             email_body="<html><body><h2>Expiring Secret Notification</h2>"  
             email_body+="<p>Dear $recipient,</p>"  
             email_body+="<p>The following application registrations have expiring secrets:</p>"  
-            email_body+="<ul>${owner_exp_apps[$recipient]}</ul>"  
+            #email_body+="<ul>${owner_exp_apps[$recipient]}</ul>"  
+            for item in "${!expiring_items[@]}"; do
+                    email_body+="<li><strong>$item</strong> - ${expiring_items[$item]}</li>"
+            done
             email_body+="</body></html>"  
             # Uncomment to send email  
             # echo -e "$email_body" | sendmail -t "$recipient"  
