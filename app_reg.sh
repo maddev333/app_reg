@@ -122,6 +122,7 @@ check_expiring_secrets() {
                 # Add expiring certificate to array
                 if [ "$certEndDate" ]; then
                     expiring_certificates["$appName - Certificate"]="$certEndDate"
+                    echo "$expiring_certificates"
                 fi
             done <<< "$certEndDates"
         fi
