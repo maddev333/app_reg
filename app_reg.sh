@@ -115,6 +115,10 @@ check_expiring_secrets() {
         # Check for expiring certificates
         certEndDates=$(az ad app credential list --id "$appId" --cert -o tsv --query "[].endDateTime")
         echo "Checking for expiring certificates for $appId - $certEndDates"
+        if [ -z "$certEndDates" ]; then
+            continue
+        fi
+
         while IFS= read -r certEndDate; do
                 # Extract components from the date string
                 year=$(echo "$certEndDates" | cut -d'-' -f1)
