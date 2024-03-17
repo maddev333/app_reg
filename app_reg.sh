@@ -100,7 +100,7 @@ check_expiring_secrets() {
                  # Fetch owners and associate with the expiring secret  
                     while IFS= read -r owner; do  
                         #echo "$owner"  
-                        owner_exp_apps["$owner"]="$appName - $secretEndDate"
+                        owner_exp_apps["$owner"]+="$appName - $secretEndDate"
                           #for key in "${!owner_exp_apps[@]}"; do  # Iterate over keys using "${!owner_exp_apps[@]}"
                            #echo "key: $key"
                           #done
@@ -140,7 +140,7 @@ check_expiring_secrets() {
                     if [ "$certEndDatesTimestamp" -le "$threeMonthsLaterTimestamp" ]; then
                        while IFS= read -r owner; do  
                         #echo "$owner"  
-                        owner_exp_apps["$owner"]="$appName - Certificate $certEndDate"
+                        owner_exp_apps["$owner"]+="$appName - Certificate $certEndDate"
                           #for key in "${!owner_exp_apps[@]}"; do  # Iterate over keys using "${!owner_exp_apps[@]}"
                            #echo "key: $key"
                           #done
