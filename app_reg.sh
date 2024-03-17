@@ -130,7 +130,7 @@ check_expiring_secrets() {
 
     # Combine expiring secrets and certificates
     declare -A expiring_items
-    expiring_items=("${expiring_apps[@]}" "${expiring_certificates[@]}")
+    expiring_items=("${owner_exp_apps[@]}" "${expiring_certificates[@]}")
   
     # Send email notification to individual recipients  
     #if [ ${#owner_exp_apps[@]} -gt 0 ]; then  
