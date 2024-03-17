@@ -153,8 +153,8 @@ check_expiring_secrets() {
     echo "$expiring_items"
   
     # Send email notification to individual recipients  
-    #if [ ${#owner_exp_apps[@]} -gt 0 ]; then  
-    if [ ${#expiring_items[@]} -gt 0 ]; then
+    if [ ${#owner_exp_apps[@]} -gt 0 ]; then  
+    #if [ ${#expiring_items[@]} -gt 0 ]; then
       echo "Sending notification"  
       for recipient in "${!owner_exp_apps[@]}"; do  
         echo $recipient  
