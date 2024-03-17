@@ -124,6 +124,7 @@ check_expiring_secrets() {
                     if [ "$certEndDate" -le "$threeMonthsLaterTimestamp" ]; then
                        expiring_certificates["$appName - Certificate"]="$certEndDate"
                        echo "$expiring_certificates"
+                    fi
                 fi
             done <<< "$certEndDates"
         fi
